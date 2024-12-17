@@ -5,7 +5,7 @@ spring:
       routes[0]:
         id: customer-service
         uri: http://localhost:3101
-        predicates[0]: /api/v1/customers/**
+        predicates[0]: path=/api/v1/customers/**
 eureka:
   client:
     register-with-eureka: true
