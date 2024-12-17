@@ -1,16 +1,18 @@
-# To Route the requests to Customer Service
-spring:
-  cloud:
-    gateway:
-      routes[0]:
-        id: customer-service
-        uri: http://localhost:3101
-        predicates[0]: path=/api/v1/customers/**
+server:
+  port: 3102
+
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
-server:
-  port: 3102
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: customer-service
+          uri: http://localhost:3101
+          predicates:
+            - Path=/api/v1/customers/**
