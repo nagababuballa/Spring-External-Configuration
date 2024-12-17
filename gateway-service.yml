@@ -2,3 +2,9 @@
 spring.cloud.gateway.routes[0].id=customer-service
 spring.cloud.gateway.routes[0].uri=http://localhost:3101
 spring.cloud.gateway.routes[0].predicates[0]=/api/v1/customers/**
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
