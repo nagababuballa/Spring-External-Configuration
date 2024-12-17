@@ -1,9 +1,17 @@
+spring:
+    rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
+      
 springdoc:
   api-docs:
     enabled: true
@@ -14,7 +22,12 @@ springdoc:
     enabled: true
     path: /swagger-ui.html
     display-request-duration: true
+    
 management:
   tracing:
     sampling:
-      probability: 1.0    
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: refresh, bus-refresh
