@@ -33,3 +33,5 @@ management:
         include: refresh, bus-refresh
 LOGSTASH_HOST: localhost
 LOGSTASH_PORT: 5044
+logging:
+  config: classpath:logback-spring.xml
