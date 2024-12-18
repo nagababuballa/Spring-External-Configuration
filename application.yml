@@ -31,3 +31,5 @@ management:
     web:
       exposure:
         include: refresh, bus-refresh
+LOGSTASH_HOST: localhost
+LOGSTASH_PORT: 5044
