@@ -16,7 +16,7 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.community.MySQL8Dialect
     hibernate:
       ddl-auto: update
     show-sql: true
