@@ -1,6 +1,11 @@
 server:
   port: 3101
 spring:
+  flyway:  
+    enabled: true
+    url: jdbc:mysql://localhost:3306/${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
   datasource:
     url: jdbc:mysql://localhost:3306/realtime
     username: root
