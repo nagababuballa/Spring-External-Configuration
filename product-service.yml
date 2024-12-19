@@ -11,10 +11,7 @@ spring:
       ddl-auto: validate
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  flyway:
+  flyway:  
+    enabled:true
     baseline-on-migrate: true
-    enabled: true
-    baseline-description: "init"
-    baseline-version: 0
-    user: ${spring.datasource.username}
-    password: ${spring.datasource.password}
+    locations:  classpath:db/migration
