@@ -1,35 +1,33 @@
 spring:
     rabbitmq:
-    host: 34.253.17.121
-    port: 5672
-    username: guest
-    password: guest
-    
+        host: 34.253.17.121
+        port: 5672
+        username: guest
+        password: guest  
 eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-      
+    client:
+        register-with-eureka: true
+        fetch-registry: true
+        service-url:
+            defaultZone: http://localhost:8761/eureka/   
 springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
-    title: My Spring Boot API
-    description: API for managing products
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    display-request-duration: true
+    api-docs:
+        enabled: true
+        path: /v3/api-docs
+        title: My Spring Boot API
+        description: API for managing products
+    swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        display-request-duration: true
     
 management:
-  tracing:
-    sampling:
-      probability: 1.0
-  endpoints:
-    web:
-      exposure:
-        include: refresh, bus-refresh
+    tracing:
+        sampling:
+            probability: 1.0
+    endpoints:
+        web:
+            exposure:
+                include: refresh, bus-refresh
 logging:
-  config: classpath:logback-spring.xml
+    config: classpath:logback-spring.xml
