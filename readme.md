@@ -4,3 +4,4 @@ docker run --network microservices-net -p 80:80 -e PGADMIN_DEFAULT_EMAIL=nagabab
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
 docker run -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:26.0.7 start-dev
 logstash.bat -f C:\logstash\config\logstash.conf
+https://www.fosstechnix.com/how-to-install-elastic-stack-on-ubuntu-24-04/
