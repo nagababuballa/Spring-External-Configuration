@@ -31,7 +31,5 @@ management:
     web:
       exposure:
         include: refresh, bus-refresh
-LOGSTASH_HOST: 54.75.25.153
-LOGSTASH_PORT: 5044
 logging:
   config: classpath:logback-spring.xml
