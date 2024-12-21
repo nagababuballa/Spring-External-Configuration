@@ -1,4 +1,10 @@
+
+
 spring:
+    jpa:
+        hibernate:
+            naming:
+                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl
     rabbitmq:
         host: localhost
         port: 5672
