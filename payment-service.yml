@@ -1,7 +1,13 @@
 server:
   port: 3104
-
 spring:
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: paymentConfirmation:com.realtime.payment.kafka.notification.PaymentNotificationRequest
   datasource:
     url: jdbc:mysql://database-1.c3ukuqawg2vu.ap-south-1.rds.amazonaws.com:3306/demo
     username: admin
