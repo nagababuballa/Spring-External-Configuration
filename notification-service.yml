@@ -3,7 +3,7 @@ server:
 spring:
   data:
     mongodb:
-      mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/
+      uri: mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/payment?retryWrites=true&w=majority
   mail:
     host: localhost
     port: 1025
