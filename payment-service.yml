@@ -6,6 +6,7 @@ spring:
       bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      group-id: my-consumer-group
       properties:
         spring.json.type.mapping: paymentConfirmation:com.realtime.payment.kafka.notification.PaymentNotificationRequest
   datasource:
