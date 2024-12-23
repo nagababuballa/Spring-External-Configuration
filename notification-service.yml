@@ -13,7 +13,7 @@ spring:
         spring.json.type.mapping: orderConfirmation:com.realtime.notification.kafka.notification.OrderConfirmation,paymentConfirmation:com.realtime.notification.kafka.notification.PaymentConfirmation
   data:
     mongodb:
-      uri: mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/payment?retryWrites=true&w=majority
+      uri: mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/notification?retryWrites=true&w=majority
   mail:
     host: localhost
     port: 1025
