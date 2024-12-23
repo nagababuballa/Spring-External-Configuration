@@ -10,7 +10,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: '*'
-        spring.json.type.mapping: orderConfirmation:com.realtime.notification.kafka.notification.OrderConfirmation,paymentConfirmation:com.realtime.notification.kafka.notification.PaymentConfirmation
+        spring.json.type.mapping: orderConfirmation:com.alibou.ecommerce.kafka.order.OrderConfirmation,paymentConfirmation:com.alibou.ecommerce.kafka.payment.PaymentConfirmation
   data:
     mongodb:
       uri: mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/notification?retryWrites=true&w=majority
