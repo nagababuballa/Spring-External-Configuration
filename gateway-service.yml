@@ -1,18 +1,12 @@
 server:
-  port: 3102  
+  port: 3102
+
 spring:
   cloud:
     gateway:
       discovery:
         locator:
           enabled: true
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: "http://localhost:8080/realms/microservice"
-  cloud:
-    gateway:
       routes:
         - id: customer-service
           uri: lb://customer-service
@@ -25,16 +19,22 @@ spring:
             - Path=/api/v1/products/**
         
         - id: payment-service
-           uri: lb://payment-service
-           predicates:
-             - Path=/api/v1/payments/**
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/payments/**
         
         - id: order-service
-           uri: lb://order-service
-           predicates:
-             - Path=/api/v1/orders/**
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/orders/**
         
-        - id: order-Lines-service
-           uri: lb://order-service
-           predicates:
-             - Path=/api/v1/order-Lines/**     
+        - id: order-lines-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/order-lines/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:8080/realms/microservice"
