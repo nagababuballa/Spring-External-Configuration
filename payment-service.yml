@@ -7,7 +7,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.type.mapping: paymentConfirmation:com.realtime.payment.kafka.notification.PaymentNotificationRequest
+        spring.json.type.mapping: paymentConfirmation:com.alibou.ecommerce.notification.PaymentNotificationRequest
   datasource:
     url: jdbc:mysql://database-1.c3ukuqawg2vu.ap-south-1.rds.amazonaws.com:3306/demo
     username: admin
