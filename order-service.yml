@@ -2,19 +2,18 @@ server:
   port: 3106
 
 spring:
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: orderConfirmation:com.alibou.ecommerce.kafka.OrderConfirmation
   datasource:
     url: jdbc:mysql://localhost:3306/realtime?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     username: naga
     password: naga
     driver-class-name: com.mysql.cj.jdbc.Driver
-  flyway:
-    url: jdbc:mysql://localhost:3306/realtime?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-    user: naga
-    password: naga
-    driver: com.mysql.cj.jdbc.Driver
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
   jpa:
     hibernate:
       ddl-auto: update
