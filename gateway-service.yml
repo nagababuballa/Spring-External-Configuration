@@ -1,6 +1,5 @@
 server:
   port: 3102
-
 spring:
   security:
     oauth2:
