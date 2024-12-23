@@ -3,4 +3,4 @@ server:
 spring:
   data:
     mongodb:
-      uri: mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/payment?retryWrites=true&w=majority
+      uri: mongodb+srv://nagababu:nagababu@cluster0.aso3j.mongodb.net/customer?retryWrites=true&w=majority
