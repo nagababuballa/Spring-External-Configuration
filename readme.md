@@ -20,12 +20,6 @@ Message<PaymentNotificationRequest> message = MessageBuilder
             .setHeader(TOPIC, "payment-topic")
             .build();
 
-Message<PaymentNotificationRequest> message = MessageBuilder
-            .withPayload(request)
-            .setHeader(TOPIC, "order-topic")
-            .build();
-
-
 postman testing
 ================
 
