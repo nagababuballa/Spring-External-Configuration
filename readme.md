@@ -8,6 +8,23 @@ docker run --network microservices-net -p 9411:9411 openzipkin/zipkin:latest
 docker run -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:26.0.7 start-dev
 docker run --name ms-mail-dev -d  -p 1025:1025  -p 1080:1080 maildev/maildev
 
+@Bean
+    public NewTopic orderTopic() {
+        return TopicBuilder
+                .name("order-topic")
+                .build();
+    }
+
+Message<PaymentNotificationRequest> message = MessageBuilder
+            .withPayload(request)
+            .setHeader(TOPIC, "payment-topic")
+            .build();
+
+Message<PaymentNotificationRequest> message = MessageBuilder
+            .withPayload(request)
+            .setHeader(TOPIC, "order-topic")
+            .build();
+
 
 postman testing
 ================
