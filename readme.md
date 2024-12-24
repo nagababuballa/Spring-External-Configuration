@@ -37,3 +37,20 @@ RequestBody :
    }
 
 Upon success new customer record will be created
+
+MimeMessage mimeMessage = mailSender.createMimeMessage();
+MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, UTF_8.name());
+
+messageHelper.setFrom("contact@aliboucoding.com");
+messageHelper.setSubject(PAYMENT_CONFIRMATION.getSubject());
+
+ Map<String, Object> variables = new HashMap<>();
+ variables.put("customerName", customerName);
+ variables.put("amount", amount);
+ variables.put("orderReference", orderReference);
+ Context context = new Context();
+ context.setVariables(variables);
+String htmlTemplate = templateEngine.process(templateName, context);
+messageHelper.setText(htmlTemplate, true);
+messageHelper.setTo(destinationEmail);
+mailSender.send(mimeMessage);
