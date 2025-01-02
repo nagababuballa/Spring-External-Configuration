@@ -54,3 +54,14 @@ String htmlTemplate = templateEngine.process(templateName, context);
 messageHelper.setText(htmlTemplate, true);
 messageHelper.setTo(destinationEmail);
 mailSender.send(mimeMessage);
+
+=====================================================================================
+ResponseEntity<HackerRankCandidateInfo> candidateResultResponseEntity = this.webClientForHR
+                    .post()
+                    .uri(testId + HR_CANDIDATES)
+                    .body(BodyInserters.fromValue(inviteRequest))
+                    .header(HttpHeaders.AUTHORIZATION, hackerrankAPIToken)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<HackerRankCandidateInfo>() {
+                    })
+                    .block();
