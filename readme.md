@@ -65,3 +65,50 @@ ResponseEntity<HackerRankCandidateInfo> candidateResultResponseEntity = this.web
                     .toEntity(new ParameterizedTypeReference<HackerRankCandidateInfo>() {
                     })
                     .block();
+=========================================================================================
+private MockWebServer mockBackEnd;
+
+ @BeforeEach
+    void setUp() throws IOException {
+        mockBackEnd = new MockWebServer();
+        mockBackEnd.start();
+        String baseUrl = mockBackEnd.url("/").toString();
+        webClient = WebClient.create(baseUrl);
+        hackerRankAPI = new HackerRankAPI(webClient);
+    }
+
+     @AfterEach
+    void tearDown() throws IOException {
+        mockBackEnd.shutdown();
+    }
+
+    @Test
+    void testGetHackerRankTestInvite() {
+
+        String responseBody = "{\n" +
+                "  \"test_link\": \"test link url\",\n" +
+                "  \"email\": \"email\",\n" +
+                "  \"id\": \"1234\"\n" +
+                "}";
+
+        mockBackEnd.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setHeader("Content-Type", "application/json")
+                .setBody(responseBody));
+
+        ResponseEntity<HackerRankCandidateInviteResponse> responseEntity =
+                hackerRankAPI.getHackerRankTestInvite(new HackerRankCandidateInviteRequest(), "1234");
+        HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = responseEntity.getBody();
+        HackerRankCandidateInviteResponse expectedResponse = getHackerRankCandidateInviteResponse();
+        assertEquals(hackerRankCandidateInviteResponse.getHackerRankCandidateId(), expectedResponse.getHackerRankCandidateId());
+        assertEquals(hackerRankCandidateInviteResponse.getTestLink(), expectedResponse.getTestLink());
+        assertEquals(hackerRankCandidateInviteResponse.getEmail(), expectedResponse.getEmail());
+    }
+
+    private HackerRankCandidateInviteResponse getHackerRankCandidateInviteResponse() {
+        HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = new HackerRankCandidateInviteResponse();
+        hackerRankCandidateInviteResponse.setHackerRankCandidateId("1234");
+        hackerRankCandidateInviteResponse.setTestLink("test link url");
+        hackerRankCandidateInviteResponse.setEmail("email");
+        return hackerRankCandidateInviteResponse;
+    }
