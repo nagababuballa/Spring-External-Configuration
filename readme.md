@@ -139,10 +139,14 @@ spring.kafka.producer.properties.spring.json.type.mapping= orderConfirmation:com
 
 using kafka template to send the payload over topic
 ---------------------------------------------------
-Message<OrderNotificationRequest> message = MessageBuilder
-            .withPayload(request)
-            .setHeader(TOPIC, "order-topic")
-            .build();
+public void sendOrderConfirmation(OrderConfirmation orderConfirmation) {
+        log.info("Sending order confirmation");
+        Message<OrderConfirmation> message = MessageBuilder
+                .withPayload(orderConfirmation)
+                .setHeader(TOPIC, "order-topic")
+                .build();
+        kafkaTemplate.send(message);
+    }
 
 Consumer Configuration
 ----------------------
