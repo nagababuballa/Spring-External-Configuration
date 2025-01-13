@@ -1,3 +1,31 @@
+-----------start-----------
+application properties for config server
+========================================
+spring cloud bus config
+=======================
+management.endpoints.web.exposure.include= refresh, bus-refresh
+spring application related
+==========================
+spring.application.name= config-server
+server.port= 3100
+git related external configuration
+==================================
+spring.profiles.active= git
+spring.cloud.config.server.git.uri= https://github.com/nagababuballa/Spring-External-Configuration
+spring.cloud.config.server.git.default-label= main
+spring.cloud.config.server.git.search-paths= .
+rabbit mq messaging configuration
+=================================
+spring.rabbitmq.host= localhost
+spring.rabbitmq.port= 5672
+spring.rabbitmq.username= guest
+spring.rabbitmq.password= guest
+logging configuration
+=====================
+logging.config= classpath:logback-spring.xml
+------------End------------
+docker setup for project
+=========================
 docker network create microservices-net
 docker run --network microservices-net -p 5432:5432 --name ms_pg_sql -e POSTGRES_USER=nagababu -e POSTGRES_PASSWORD=nagababu -d postgres 
 docker run --network microservices-net -p 80:80 -e PGADMIN_DEFAULT_EMAIL=nagababu.ba@gmail.com -e PGADMIN_DEFAULT_PASSWORD=nagababu --name ms_pgadmin -d dpage/pgadmin4
