@@ -35,6 +35,49 @@ spring.config.import= optional:configserver:http://localhost:3100
 </dependency>
 @EnableEurekaServer
 
+Centralized Logging Configuration
+=================================
+1)each and every microservice write the log to a file that contains the log information
+logging.file.name=/var/log/microservice-name.log
+logging.pattern.file={"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}", "level":"%p", "thread":"%t", "logger":"%c", "message":"%m"}
+2)Configure file beats in each micro service which is responsible for monitoring the log file and push it to logstash
+filebeat.yml
+============
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/*.log  # Path to log files
+    fields:
+      application: "microservice-name"  # Replace with the name of the service
+    fields_under_root: true
+    multiline:
+      pattern: '^{'
+      negate: true
+      match: after
+output.logstash:
+  hosts: ["${logstash-server-ip}:5044"]  # Replace with your Logstash server IP
+Log stash
+==========
+logstash-filebeat.conf
+----------------------
+input {
+  beats {
+    port => 5044
+  }
+}
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"] # Elasticsearch endpoint
+    index => "microservices-logs-%{+YYYY.MM.dd}"
+  }
+  stdout {
+    codec => rubydebug
+  }
+}
+Configure Elastic search and Kibana
+Go to Kibana cosole and under indexes lookup for your index 
+and see the information about your log file
 docker setup for project
 =========================
 docker network create microservices-net
