@@ -117,6 +117,55 @@ spring.sleuth.propagation.type=B3
 when making REST calls between microservices, Spring will automatically include tracing
 headers (like X-B3-TraceId and X-B3-SpanId) in the requests.
 
+Kafka
+=====
+Distributed Messaging system
+
+Topic Creation
+--------------
+@Bean
+    public NewTopic orderTopic() {
+        return TopicBuilder
+                .name("order-topic")
+                .build();
+    }
+    
+Producer configuration
+----------------------
+spring.kafka.producer.bootstrap-servers= localhost:9092  ----> Kafka server ip address and port
+spring.kafka.producer.key-serializer= org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer= org.springframework.kafka.support.serializer.JsonSerializer
+spring.kafka.producer.properties.spring.json.type.mapping= orderConfirmation:com.alibou.ecommerce.kafka.OrderConfirmation
+
+using kafka template to send the payload over topic
+---------------------------------------------------
+Message<OrderNotificationRequest> message = MessageBuilder
+            .withPayload(request)
+            .setHeader(TOPIC, "order-topic")
+            .build();
+
+Consumer Configuration
+----------------------
+spring.kafka.consumer.bootstrap-servers: localhost:9092
+spring.kafka.consumer.group-id: paymentGroup,orderGroup
+spring.kafka.consumer.auto-offset-reset: earliest
+spring.kafka.consumer.key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+spring.kafka.consumer.properties.spring.json.trusted.packages: '*'
+spring.kafka.consumer.properties.spring.json.type.mapping:orderConfirmation:com.alibou.ecommerce.kafka.order.OrderConfirmation,paymentConfirmation:com.alibou.ecommerce.kafka.payment.PaymentConfirmation
+
+Receving the Payload from kafka topic using Listener
+----------------------------------------------------
+@KafkaListener(topics = "order-topic")
+    public void consumeOrderConfirmationNotifications(OrderConfirmation orderConfirmation) throws MessagingException {
+        log.info(format("Consuming the message from order-topic Topic:: %s", orderConfirmation));
+        repository.save(Notification.builder()
+                        .type(ORDER_CONFIRMATION)
+                        .notificationDate(LocalDateTime.now())
+                        .orderConfirmation(orderConfirmation)
+                        .build());
+    }
+
 docker setup for project
 =========================
 docker network create microservices-net
@@ -128,18 +177,6 @@ https://www.fosstechnix.com/how-to-install-elastic-stack-on-ubuntu-24-04/
 docker run --network microservices-net -p 9411:9411 openzipkin/zipkin:latest
 docker run -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:26.0.7 start-dev
 docker run --name ms-mail-dev -d  -p 1025:1025  -p 1080:1080 maildev/maildev
-
-@Bean
-    public NewTopic orderTopic() {
-        return TopicBuilder
-                .name("order-topic")
-                .build();
-    }
-
-Message<PaymentNotificationRequest> message = MessageBuilder
-            .withPayload(request)
-            .setHeader(TOPIC, "payment-topic")
-            .build();
 
 postman testing
 ================
