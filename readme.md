@@ -156,19 +156,20 @@ spring.kafka.consumer.auto-offset-reset: earliest
 spring.kafka.consumer.key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 spring.kafka.consumer.value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 spring.kafka.consumer.properties.spring.json.trusted.packages: '*'
-spring.kafka.consumer.properties.spring.json.type.mapping:orderConfirmation:com.alibou.ecommerce.kafka.order.OrderConfirmation,paymentConfirmation:com.alibou.ecommerce.kafka.payment.PaymentConfirmation
+spring.kafka.consumer.properties.spring.json.type.mapping:orderConfirmation:com.alibou.ecommerce.kafka.order.OrderConfirmation
 
 Receving the Payload from kafka topic using Listener
 ----------------------------------------------------
-@KafkaListener(topics = "order-topic")
-    public void consumeOrderConfirmationNotifications(OrderConfirmation orderConfirmation) throws MessagingException {
-        log.info(format("Consuming the message from order-topic Topic:: %s", orderConfirmation));
-        repository.save(Notification.builder()
-                        .type(ORDER_CONFIRMATION)
-                        .notificationDate(LocalDateTime.now())
-                        .orderConfirmation(orderConfirmation)
-                        .build());
+@KafkaListener(topics = "order-topic", groupId = "order-group")
+@RetryableTopic(attempts = "3")
+public void consumeOrderConfirmationNotifications(OrderConfirmation orderConfirmation,@Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.OFFSET) long offset) throws MessagingException {
+        log.info("Received: {} from {} offset {}", new ObjectMapper().writeValueAsString(orderConfirmation), topic, offset);
     }
+    
+@DltHandler 
+public void listenDLT(OrderConfirmation orderConfirmation, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.OFFSET) long offset) {
+  log.info("DLT Received : {} , from {} , offset {}",new ObjectMapper().writeValueAsString(orderConfirmation),topic,offset);
+}
 
 docker setup for project
 =========================
