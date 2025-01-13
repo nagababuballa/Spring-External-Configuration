@@ -29,6 +29,12 @@ spring.application.name= discovery-service
 spring.config.import= optional:configserver:http://localhost:3100
 ------------End------------
 
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
+@EnableEurekaServer
+
 docker setup for project
 =========================
 docker network create microservices-net
