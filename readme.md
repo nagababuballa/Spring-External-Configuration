@@ -4,8 +4,6 @@ application properties for config server
 spring cloud bus config
 =======================
 management.endpoints.web.exposure.include= refresh, bus-refresh
-spring application related
-==========================
 spring.application.name= config-server
 server.port= 3100
 git related external configuration
@@ -24,6 +22,13 @@ logging configuration
 =====================
 logging.config= classpath:logback-spring.xml
 ------------End------------
+
+-----------start-----------
+application properties for discovery server(Eureka)
+spring.application.name= discovery-service
+spring.config.import= optional:configserver:http://localhost:3100
+------------End------------
+
 docker setup for project
 =========================
 docker network create microservices-net
