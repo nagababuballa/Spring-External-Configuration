@@ -3839,110 +3839,163 @@ docker run --network microservices-net -p 9411:9411 openzipkin/zipkin:latest
 docker run -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:26.0.7 start-dev
 docker run --name ms-mail-dev -d  -p 1025:1025  -p 1080:1080 maildev/maildev
 
-postman testing
-================
+Mail Template
+=============
+Docker setup for configuration
 
-Method: Post 
-Uri    : http://localhost:3102/api/v1/customers
-RequestBody :
-  {
-   "firstname":"Balla",
-   "lastname":"Nagababu",
-   "email":"nagababu.ba@gmail.com",
-   "address":{
-    "street":"Pitapuram Colony",
-    "houseNumber":"7-112/3",
-    "zipCode":"530003"
-   }
+  mail-dev:
+    container_name: ms-mail-dev
+    image: maildev/maildev
+    ports:
+      - 1080:1080
+      - 1025:1025
+ 
+dependencies
+------------
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
 
-Upon success new customer record will be created
-
+Preaparing Mail Messaging Environment
+-------------------------------------
 MimeMessage mimeMessage = mailSender.createMimeMessage();
 MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, UTF_8.name());
 
-messageHelper.setFrom("contact@aliboucoding.com");
-messageHelper.setSubject(PAYMENT_CONFIRMATION.getSubject());
-
+messageHelper.setFrom("awsnagababu@gmail.com");--->from address
+messageHelper.setSubject("SOME SUBJECT"); --->subject
  Map<String, Object> variables = new HashMap<>();
  variables.put("customerName", customerName);
  variables.put("amount", amount);
  variables.put("orderReference", orderReference);
  Context context = new Context();
  context.setVariables(variables);
-String htmlTemplate = templateEngine.process(templateName, context);
+Dynamically renders data by substituing the context information
+
+payment-confirmation.html
+--------------------------
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #555;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            background-color: #007BFF;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Payment Confirmation</h1>
+    <p>Dear <span th:text="${customerName}"></span>,</p>
+    <p>Your payment of $<span th:text="${amount}"></span> has been successfully processed.</p>
+    <p>Order reference: <span th:text="${orderReference}"></span></p>
+    <p>Thank you for choosing our service. If you have any questions, feel free to contact us.</p>
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>&copy; 2024 AlibouCoding. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>
+
+String htmlTemplate = templateEngine.process("payment-confirmation.html", context);
 messageHelper.setText(htmlTemplate, true);
-messageHelper.setTo(destinationEmail);
+messageHelper.setTo("nagababu.ba@gmail.com");
 mailSender.send(mimeMessage);
 
-=====================================================================================
-ResponseEntity<HackerRankCandidateInfo> candidateResultResponseEntity = this.webClientForHR
-                    .post()
-                    .uri(testId + HR_CANDIDATES)
-                    .body(BodyInserters.fromValue(inviteRequest))
-                    .header(HttpHeaders.AUTHORIZATION, hackerrankAPIToken)
-                    .retrieve()
-                    .toEntity(new ParameterizedTypeReference<HackerRankCandidateInfo>() {
-                    })
-                    .block();
-=========================================================================================
-private MockWebServer mockBackEnd;
+Webclient for service-service communication
+===========================================
+dependency
+----------
+webflux
 
- 
-    
- @BeforeEach
-    void setUp() throws IOException {
-        mockBackEnd = new MockWebServer();
-        mockBackEnd.start();
-        String baseUrl = mockBackEnd.url("/").toString();
-        webClient = WebClient.create(baseUrl);
-        hackerRankAPI = new HackerRankAPI(webClient);
+bean definition
+---------------
+@Bean
+    public WebClient webClient(WebClient.Builder builder) {
+    return builder
+	.baseUrl("https://example.com") // Default base URL (optional)
+	.defaultHeader("Content-Type", "application/json") // Default headers (optional)
+	.build();
     }
 
- @AfterEach
-    void tearDown() throws IOException {
-        mockBackEnd.shutdown();
-    }
+ customizing the bean
+ -----------------
+ WebClient customWebClient = webClient.mutate()
+        .baseUrl("https://another-api.com")
+        .defaultHeader("Authorization", "Bearer token")
+        .build();
 
-@Test
-    void testGetHackerRankTestInvite() {
-        mockBackEnd.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.OK.value())
-                .setHeader("Content-Type", "application/json")
-                .setBody(responseBody));
-        ResponseEntity<HackerRankCandidateInviteResponse> responseEntity =
-                hackerRankAPI.getHackerRankTestInvite(new HackerRankCandidateInviteRequest(), "1234");
-        HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = responseEntity.getBody();
-        HackerRankCandidateInviteResponse expectedResponse = getHackerRankCandidateInviteResponse();
-        assertEquals(hackerRankCandidateInviteResponse.getHackerRankCandidateId(), expectedResponse.getHackerRankCandidateId());
-        assertEquals(hackerRankCandidateInviteResponse.getTestLink(), expectedResponse.getTestLink());
-        assertEquals(hackerRankCandidateInviteResponse.getEmail(), expectedResponse.getEmail());
-    }
+sending get request
+--------------------
+String someContent = webClient.get()
+	.uri("/api/resource")
+	.retrieve()
+	.bodyToMono(String.class)
+	.block(); 
 
+Sending Post Request
+--------------------
+MyResponse response = webClient.post()
+	.uri(url) // Specify the endpoint URI
+	.bodyValue(requestBody) // Set the request body
+	.retrieve() // Trigger the request and retrieve the response
+	.bodyToMono(MyResponse.class) // Map response body to a Mono of MyResponse
+	.block(); // Blocking to get the response (avoid blocking in reactive systems)
 
-@Test
-void testGetHackerRankTestInvite() {
-    String responseBody = "{\n" +
-            "  \"test_link\": \"test link url\",\n" +
-            "  \"email\": \"email\",\n" +
-            "  \"id\": \"1234\"\n" +
-            "}";
-    mockBackEnd.enqueue(new MockResponse()
-            .setResponseCode(HttpStatus.OK.value())
-            .setHeader("Content-Type", "application/json")
-            .setBody(responseBody));
-    ResponseEntity<HackerRankCandidateInviteResponse> responseEntity =
-            hackerRankAPI.getHackerRankTestInvite(new HackerRankCandidateInviteRequest(), "1234");
-    HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = responseEntity.getBody();
-    HackerRankCandidateInviteResponse expectedResponse = getHackerRankCandidateInviteResponse();
-    assertEquals(hackerRankCandidateInviteResponse.getHackerRankCandidateId(), expectedResponse.getHackerRankCandidateId());
-    assertEquals(hackerRankCandidateInviteResponse.getTestLink(), expectedResponse.getTestLink());
-    assertEquals(hackerRankCandidateInviteResponse.getEmail(), expectedResponse.getEmail());
-}
+Sending Put Request
+-------------------
+MyResponse response = webClient.put()
+	.uri(url) // Specify the endpoint URI
+	.bodyValue(requestBody) // Set the request body
+	.retrieve() // Trigger the request and retrieve the response
+	.bodyToMono(MyResponse.class) // Map response body to a Mono of MyResponse
+	.block(); // Blocking to get the response (avoid blocking in reactive systems)
 
-private HackerRankCandidateInviteResponse getHackerRankCandidateInviteResponse() {
-    HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = new HackerRankCandidateInviteResponse();
-    hackerRankCandidateInviteResponse.setHackerRankCandidateId("1234");
-    hackerRankCandidateInviteResponse.setTestLink("test link url");
-    hackerRankCandidateInviteResponse.setEmail("email");
-    return hackerRankCandidateInviteResponse;
-}
+ Sending Delete Request
+ ----------------------
+ webClient.delete()
+            .uri(url)
+            .retrieve()
+            .bodyToMono(Void.class)
+            .subscribe(response -> System.out.println("Async: Resource deleted successfully"));
