@@ -3943,6 +3943,32 @@ messageHelper.setText(htmlTemplate, true);
 messageHelper.setTo("nagababu.ba@gmail.com");
 mailSender.send(mimeMessage);
 
+Validation
+==========
+
+Dependency
+----------
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+@Valid ---> used at controller level for validating request body
+
+public class User {
+    @NotNull(message = "Username cannot be null")
+    @Size(min = 2, max = 50, message = "Username should be between 2 and 50 characters")
+    private String username;
+    @NotNull(message = "Email cannot be null")
+    @Email(message = "Email should be valid")
+    private String email;
+    @Min(value = 18, message = "Age should be at least 18")
+    private int age;
+    @NotNull(message = "Date of Birth cannot be null")
+    @Past(message = "Date of birth must be in the past")
+    private LocalDate dateOfBirth;
+    // Getters and setters
+}
+
 Webclient for service-service communication
 ===========================================
 dependency
@@ -4040,7 +4066,7 @@ Controller Level
                             schema = @Schema(implementation = SwaggerAuthResponseVO.class))}),
             @ApiResponse(responseCode = "401", description = "Invalid credentials/token supplied",
                     content = @Content)
-    })
+    })   
 
 Generating Documentation using Java Doc Tool
 --------------------------------------------
@@ -4048,4 +4074,75 @@ Generating Documentation using Java Doc Tool
 javadoc -d /path/to/output -sourcepath /path/to/src -subpackages com.example ---> this statement generates the documenation for all the classes which are present in and sub package of com.example
 
 javadoc -d /path/to/output /path/to/YourClass.java ---> java documentation for a single class
+
+Testing
+=======
+
+add the Jacoco plugin to measure the code coverage
+
+<plugin>
+   <groupId>org.jacoco</groupId>
+   <artifactId>jacoco-maven-plugin</artifactId>
+   <version>0.8.12</version>
+   <executions>
+	<execution>
+		<goals>
+		   <goal>prepare-agent</goal>
+		</goals>
+	</execution>
+	<execution>
+		<id>report</id>
+		<phase>prepare-package</phase>
+		<goals>
+		   <goal>report</goal>
+		</goals>
+	</execution>
+   </executions>
+</plugin>
+
+prepare-agent: Sets up the agent to collect coverage data during tests.
+report: Generates the coverage report after the tests are executed.
+the report will be placed in the target/site/jacoco/ directory by default.
+open index.html
+
+Maven Surefire Plugin
+---------------------
+
+If the plugin is not explicitly declared, Maven will use its internal default version of the Surefire Plugin to run the tests.
+
+generate the default test reports (target/surefire-reports/)
+
+Development side
+----------------
+1)JUnit is used for the overall test structure and lifecycle (e.g., @Test annotation).
+2)Mockito is used for mocking the MyService dependency.
+3)okhttp: Used for making HTTP requests, but it's not focused on unit testing. You might use it in integration tests where HTTP interactions are required.
+4)mockwebserver: Used for mocking HTTP server responses, useful in integration tests or in unit tests that involve HTTP communication.
+5)assertj-core: Provides expressive assertions, useful for writing unit test assertions that are more readable and powerful.
+
+Under the hood Junit and mockito by default included with spring-bbot-starter-test
+
+Dependencies
+------------
+
+<dependency>
+   <groupId>com.squareup.okhttp3</groupId>
+   <artifactId>okhttp</artifactId>
+   <scope>test</scope>
+</dependency>
+<dependency>
+   <groupId>com.squareup.okhttp3</groupId>
+   <artifactId>mockwebserver</artifactId>
+   <scope>test</scope>
+</dependency>
+<dependency>
+   <groupId>org.assertj</groupId>
+   <artifactId>assertj-core</artifactId>
+   <scope>test</scope>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>test</artifactId>
+</dependency>
+
 
