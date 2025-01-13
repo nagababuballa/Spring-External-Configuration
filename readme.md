@@ -117,6 +117,58 @@ spring.sleuth.propagation.type=B3
 when making REST calls between microservices, Spring will automatically include tracing
 headers (like X-B3-TraceId and X-B3-SpanId) in the requests.
 
+Circuit Breaker
+---------------
+Inorder to avoid cascading failures
+it is the specification and implementation is provided by number of techniques like Netflix Hystrix , Resillence 4J and so on
+Since Netflix Hystrix is outdated and it is in maintanence we are using Resillence 4j
+
+dependencies
+------------
+<dependency>
+   <groupId>org.springframework.cloud</groupId>
+   <artifactId>spring-cloud-starter-actuator</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+</dependency>
+
+Properties
+----------
+management.health.circuitbreakers.enabled=true
+management.endpoints.web.exposure.include=*
+management.endpoint.health.show-details=always
+
+#Resilinece4j Properties
+resilience4j.circuitbreaker.instances.order.registerHealthIndicator=true   ---> able to see those states like open,half-open,close etc.
+resilience4j.circuitbreaker.instances.order.event-consumer-buffer-size=10  ---> 10 calls
+resilience4j.circuitbreaker.instances.order.slidingWindowType=COUNT_BASED  ---> calls are based on count
+resilience4j.circuitbreaker.instances.order.slidingWindowSize=5            ---> check for 5 continuous failures
+resilience4j.circuitbreaker.instances.order.failureRateThreshold=50        ---> when thresold becomes 50% (5/10*100)
+resilience4j.circuitbreaker.instances.order.waitDurationInOpenState=5s     ---> wait for 5 seconds when it is in half open state and again triggers the calls
+resilience4j.circuitbreaker.instances.order.permittedNumberOfCallsInHalfOpenState=3  ---> sends three calls to check the service is avilable or not
+resilience4j.circuitbreaker.instances.order.automaticTransitionFromOpenToHalfOpenEnabled=true  ---> Half open to open when fails
+
+#Resilience4J Timeout Properties
+resilience4j.timelimiter.instances.order.timeout-duration=3s ---> if service call takes beyond 3s it will throw timeout exception
+
+#Resilience4J Retry Properties
+resilience4j.retry.instances.order.max-attempts=3     
+resilience4j.retry.instances.order.wait-duration=5s
+
+@PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @CircuitBreaker(name = "order", fallbackMethod = "fallbackMethod")
+    @TimeLimiter(name = "order")
+    @Retry(name = "order")
+    public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
+        return CompletableFuture.supplyAsync(() -> orderService.placeOrder(orderRequest));
+    }
+    public CompletableFuture<String> fallbackMethod(OrderRequest orderRequest, RuntimeException runtimeException) {
+        return CompletableFuture.supplyAsync(() -> "Oops! Something went wrong, please order after some time!");
+    }
+
 Kafka
 =====
 Distributed Messaging system
