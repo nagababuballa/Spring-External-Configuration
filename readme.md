@@ -78,6 +78,43 @@ output {
 Configure Elastic search and Kibana
 Go to Kibana cosole and under indexes lookup for your index 
 and see the information about your log file
+Distributed Tracing
+====================
+we are achieving it with the help of Zipkin
+-- Micrometer Tracing Bridge --
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+		</dependency>
+		-- Brave Tracer for Zipkin --
+		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave</artifactId>
+		</dependency>
+		-- Zipkin Reporter for sending traces --
+		<dependency>
+			<groupId>io.zipkin.reporter2</groupId>
+			<artifactId>zipkin-reporter-brave</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+application.properties
+======================
+# Enable Micrometer tracing
+management.tracing.enabled=true
+
+# Configure the Zipkin endpoint
+management.zipkin.tracing.enabled=true
+management.zipkin.tracing.endpoint=http://<zipkin-server-ip>:9411/api/v2/spans
+
+# Enable propagation of trace IDs
+spring.sleuth.propagation.type=B3
+
+when making REST calls between microservices, Spring will automatically include tracing headers (like X-B3-TraceId and X-B3-SpanId) in the requests.
+
 docker setup for project
 =========================
 docker network create microservices-net
@@ -150,6 +187,8 @@ ResponseEntity<HackerRankCandidateInfo> candidateResultResponseEntity = this.web
 =========================================================================================
 private MockWebServer mockBackEnd;
 
+ 
+    
  @BeforeEach
     void setUp() throws IOException {
         mockBackEnd = new MockWebServer();
@@ -159,25 +198,17 @@ private MockWebServer mockBackEnd;
         hackerRankAPI = new HackerRankAPI(webClient);
     }
 
-     @AfterEach
+ @AfterEach
     void tearDown() throws IOException {
         mockBackEnd.shutdown();
     }
 
-    @Test
+@Test
     void testGetHackerRankTestInvite() {
-
-        String responseBody = "{\n" +
-                "  \"test_link\": \"test link url\",\n" +
-                "  \"email\": \"email\",\n" +
-                "  \"id\": \"1234\"\n" +
-                "}";
-
         mockBackEnd.enqueue(new MockResponse()
                 .setResponseCode(HttpStatus.OK.value())
                 .setHeader("Content-Type", "application/json")
                 .setBody(responseBody));
-
         ResponseEntity<HackerRankCandidateInviteResponse> responseEntity =
                 hackerRankAPI.getHackerRankTestInvite(new HackerRankCandidateInviteRequest(), "1234");
         HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = responseEntity.getBody();
@@ -187,10 +218,31 @@ private MockWebServer mockBackEnd;
         assertEquals(hackerRankCandidateInviteResponse.getEmail(), expectedResponse.getEmail());
     }
 
-    private HackerRankCandidateInviteResponse getHackerRankCandidateInviteResponse() {
-        HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = new HackerRankCandidateInviteResponse();
-        hackerRankCandidateInviteResponse.setHackerRankCandidateId("1234");
-        hackerRankCandidateInviteResponse.setTestLink("test link url");
-        hackerRankCandidateInviteResponse.setEmail("email");
-        return hackerRankCandidateInviteResponse;
-    }
+
+@Test
+void testGetHackerRankTestInvite() {
+    String responseBody = "{\n" +
+            "  \"test_link\": \"test link url\",\n" +
+            "  \"email\": \"email\",\n" +
+            "  \"id\": \"1234\"\n" +
+            "}";
+    mockBackEnd.enqueue(new MockResponse()
+            .setResponseCode(HttpStatus.OK.value())
+            .setHeader("Content-Type", "application/json")
+            .setBody(responseBody));
+    ResponseEntity<HackerRankCandidateInviteResponse> responseEntity =
+            hackerRankAPI.getHackerRankTestInvite(new HackerRankCandidateInviteRequest(), "1234");
+    HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = responseEntity.getBody();
+    HackerRankCandidateInviteResponse expectedResponse = getHackerRankCandidateInviteResponse();
+    assertEquals(hackerRankCandidateInviteResponse.getHackerRankCandidateId(), expectedResponse.getHackerRankCandidateId());
+    assertEquals(hackerRankCandidateInviteResponse.getTestLink(), expectedResponse.getTestLink());
+    assertEquals(hackerRankCandidateInviteResponse.getEmail(), expectedResponse.getEmail());
+}
+
+private HackerRankCandidateInviteResponse getHackerRankCandidateInviteResponse() {
+    HackerRankCandidateInviteResponse hackerRankCandidateInviteResponse = new HackerRankCandidateInviteResponse();
+    hackerRankCandidateInviteResponse.setHackerRankCandidateId("1234");
+    hackerRankCandidateInviteResponse.setTestLink("test link url");
+    hackerRankCandidateInviteResponse.setEmail("email");
+    return hackerRankCandidateInviteResponse;
+}
