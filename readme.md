@@ -3999,3 +3999,53 @@ MyResponse response = webClient.put()
             .retrieve()
             .bodyToMono(Void.class)
             .subscribe(response -> System.out.println("Async: Resource deleted successfully"));
+
+Configuring Open API Documentation SWAGGER
+===========================================
+Dependency
+----------
+<dependency>
+   <groupId>org.springdoc</groupId>
+   <artifactId>springdoc-openapi-ui</artifactId>
+   <version>2.1.0</version> <!-- Use the latest version -->
+</dependency>
+
+Customizing the API Bean
+------------------------
+
+@Bean
+public OpenAPI customOpenAPI() {
+ return new OpenAPI()
+        .info(new Info()
+        .title("Microservices API Documentation")
+        .version("1.0")
+        .description("This is the API documentation for our microservices system"));
+    }
+
+ Properties
+ ----------
+
+ # Customize the Swagger UI path
+springdoc.swagger-ui.path=/api-docs
+
+# Customize the OpenAPI spec path
+springdoc.api-docs.path=/v3/api-docs
+
+Controller Level
+----------------
+@Operation(summary = "Authentication service")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authentication service",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SwaggerAuthResponseVO.class))}),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials/token supplied",
+                    content = @Content)
+    })
+
+Generating Documentation using Java Doc Tool
+--------------------------------------------
+
+javadoc -d /path/to/output -sourcepath /path/to/src -subpackages com.example ---> this statement generates the documenation for all the classes which are present in and sub package of com.example
+
+javadoc -d /path/to/output /path/to/YourClass.java ---> java documentation for a single class
+
