@@ -171,6 +171,60 @@ public void listenDLT(OrderConfirmation orderConfirmation, @Header(KafkaHeaders.
   log.info("DLT Received : {} , from {} , offset {}",new ObjectMapper().writeValueAsString(orderConfirmation),topic,offset);
 }
 
+Monitoring
+==========
+we are using prometeus and grafana for monitoring all the micro services
+1)Actuator is used fro collecting all the metrics
+2)Promotheus uses an in memory database to store these metrics
+3)Grafana is used fro visualization purpose by collecting these metrics from Promotheus
+dependencies
+------------
+add these dependencies in all our micro services
+<dependency>
+   <groupId>io.micrometer</groupId>
+   <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+properties
+----------
+we need to add the prometheus actuator end point
+# Actuator Prometheus Endpoint
+management.endpoints.web.exposure.include= prometheus
+
+Install Promotheus and configure it like below
+
+global:
+  scrape_interval:     10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'product_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['product-service:8080']--->Hostname:port
+        labels:
+          application: 'Product Service Application'
+  - job_name: 'order_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['order-service:8080']
+        labels:
+          application: 'Order Service Application'
+  - job_name: 'inventory_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['inventory-service:8080']
+        labels:
+          application: 'Inventory Service Application'
+  - job_name: 'notification_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['notification-service:8080']
+        labels:
+          application: 'Notification Service Application'
 docker setup for project
 =========================
 docker network create microservices-net
