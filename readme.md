@@ -3796,6 +3796,37 @@ click on load
 select Promotheus dropdown ---> select Prometheus Micro services(we named it already)
 click on import
 we can see the dashboard for all these micro services
+
+DockerFile
+----------
+# Use the OpenJDK 17 base image
+FROM openjdk:17   -->The base image is an official OpenJDK image with Java 17 installed. if not pulls it from docker hub
+
+# Expose port 3004
+EXPOSE 3004   --> service is exposed at port no:3004
+
+# Copy the entire project directory into the container
+ADD target/driftin2-interviewing-service-0.0.1-SNAPSHOT.jar driftin2-interviewing-service-0.0.1-SNAPSHOT.jar --->copy local folder path to container path
+ADD src/main/resources/ src/main/resources/  --->copy local folder path to container path
+ADD target/ target/ --->copy local folder path to container path
+
+# Set the entrypoint command with parameters as variables
+ARG PROFILE                 --> this is the argument supplied at the time of building the image
+ENV PROFILE=${PROFILE}      --> Sets an environment variable PROFILE in the container using the value of the PROFILE build-time argument.
+ARG PROPERTIES_FILE         --> this is the argument supplied at the time of building the image
+ENV PROPERTIES_FILE=${PROPERTIES_FILE} --> Sets an environment variable PROPERTIES_FILE in the container using the value of the PROPERTIES_FILE at build-time
+ARG AWS_ACCESS_KEY_ID  --> this is the argument supplied at the time of building the image
+ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --> Sets an environment variable AWS_ACCESS_KEY_ID in the container using the value of the AWS_ACCESS_KEY_ID at build.
+ARG AWS_SECRET_ACCESS_KEY  --> this is the argument supplied at the time of building the image
+ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --> Sets an environment variable AWS_SECRET_ACCESS_KEY in the container using the value of the AWS_SECRET_ACCESS_KEY at build-time.
+
+# Verify if the properties file is copied correctly
+RUN ls -l /src/main/resources/
+
+ENTRYPOINT ["java", "-jar", "/driftin2-interviewing-service-0.0.1-SNAPSHOT.jar", "--spring.profiles.active=${PROFILE}", "--spring.config.location=${PROPERTIES_FILE}"]  --> Specifies the command to run when the container starts. It launches the Spring Boot application with the specified profile and properties file
+
+docker build --build-arg PROFILE=dev --build-arg PROPERTIES_FILE=/path/to/application.properties --build-arg AWS_ACCESS_KEY_ID=my-access-key --build-arg AWS_SECRET_ACCESS_KEY=my-secret-key -t driftin2-interviewing-service-dev .
+
 docker setup for project
 =========================
 docker network create microservices-net
