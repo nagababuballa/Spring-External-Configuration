@@ -4145,4 +4145,169 @@ Dependencies
    <artifactId>test</artifactId>
 </dependency>
 
+controller
+---------
+Use @WebMvcTest with MockMvc for controller-only tests.
 
+@WebMvcTest(MyController.class)
+public class MyControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+    @MockBean
+    private MyService myService;
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+    @Test
+    public void testGetData() throws Exception {
+        when(myService.getData()).thenReturn("Mocked Data");
+        mockMvc.perform(get("/api/data"))
+               .andExpect(status().isOk())
+               .andExpect(content().string("Mocked Data"));
+    }
+    @Test
+    public void testPostData() throws Exception {
+        String requestBody = "{\"name\":\"test\"}";
+        mockMvc.perform(post("/api/data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+               .andExpect(status().isCreated())
+               .andExpect(jsonPath("$.message").value("Data created"));
+    }
+    @Test
+    public void testPutData() throws Exception {
+        String requestBody = "{\"name\":\"updated\"}";
+        mockMvc.perform(put("/api/data/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.message").value("Data updated"));
+    }
+    @Test
+    public void testDeleteData() throws Exception {
+        mockMvc.perform(delete("/api/data/1"))
+               .andExpect(status().isNoContent());
+    }
+}
+
+Service
+-------
+@RunWith(SpringRunner.class)
+@SpringBootTest  // Spring Boot test with full context (can be used for service testing)
+public class MyServiceTest {
+    @Autowired
+    private MyService myService;  // Service under test
+    @MockBean
+    private MyRepository myRepository;  // Mock repository dependency
+    @Test
+    public void testGetData() {
+        // Arrange: Mock the repository's behavior
+        when(myRepository.findDataById(1)).thenReturn(new Data("Sample Data"));
+        // Act: Call the service method
+        Data result = myService.getDataById(1);
+        // Assert: Verify the result
+        assertNotNull(result);
+        assertEquals("Sample Data", result.getData());
+    }
+    @Test
+    public void testCreateData() {
+        // Arrange: Create the data to be saved
+        Data newData = new Data("New Data");   
+        // Act: Call the service method
+        when(myRepository.save(any(Data.class))).thenReturn(newData);
+        Data savedData = myService.createData(newData);
+        // Assert: Verify that the data was saved correctly
+        assertNotNull(savedData);
+        assertEquals("New Data", savedData.getData());
+    }
+}
+
+Repository Only Test
+--------------------
+@RunWith(SpringRunner.class)
+@DataJpaTest  // Automatically sets up an in-memory database for testing JPA
+public class MyRepositoryTest {
+    @Autowired
+    private MyRepository myRepository;  // Injecting the repository under test
+    @Test
+    public void testFindById() {
+        // Arrange: Save an entity into the in-memory database
+        MyEntity savedEntity = myRepository.save(new MyEntity("Test Data"));
+        // Act: Fetch the entity using the repository
+        Optional<MyEntity> foundEntity = myRepository.findById(savedEntity.getId());
+        // Assert: Verify that the entity is correctly fetched
+        assertTrue(foundEntity.isPresent());
+        assertEquals("Test Data", foundEntity.get().getName());
+    }
+    @Test
+    public void testFindByName() {
+        // Arrange: Save an entity
+        myRepository.save(new MyEntity("John Doe"));
+        // Act: Fetch the entity by name
+        List<MyEntity> entities = myRepository.findByName("John Doe");
+        // Assert: Verify the list contains the entity
+        assertEquals(1, entities.size());
+        assertEquals("John Doe", entities.get(0).getName());
+    }
+    @Test
+    public void testDeleteById() {
+        // Arrange: Save an entity
+        MyEntity savedEntity = myRepository.save(new MyEntity("Test Data"));
+        // Act: Delete the entity by ID
+        myRepository.deleteById(savedEntity.getId());
+        // Assert: Verify that the entity is deleted
+        Optional<MyEntity> deletedEntity = myRepository.findById(savedEntity.getId());
+        assertFalse(deletedEntity.isPresent());
+    }
+}
+
+Integration Test
+----------------
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+public class UserServiceIntegrationTest {
+    private MockWebServer mockWebServer;
+    @Autowired
+    private UserService userService;
+    @Before
+    public void setUp() throws IOException {
+        mockWebServer = new MockWebServer();
+        mockWebServer.start();
+        // Override WebClient base URL for testing
+        ReflectionTestUtils.setField(userService, "webClient",
+                WebClient.builder()
+                        .baseUrl(mockWebServer.url("/").toString())
+                        .build());
+    }
+    @After
+    public void tearDown() throws IOException {
+        mockWebServer.shutdown();
+    }
+    @Test
+    public void testGetUserById() throws Exception {
+        // Arrange: Mock the external API response
+        String mockResponse = """
+                {
+                    "id": "1",
+                    "name": "John Doe",
+                    "email": "john.doe@example.com"
+                }
+                """;
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(mockResponse)
+                .addHeader("Content-Type", "application/json"));
+        // Act: Call the service method
+        Mono<User> userMono = userService.getUserById("1");
+        User user = userMono.block();
+        // Assert: Verify the response
+        assertNotNull(user);
+        assertEquals("1", user.getId());
+        assertEquals("John Doe", user.getName());
+        assertEquals("john.doe@example.com", user.getEmail());
+        // Verify the request made to MockWebServer
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/users/1", recordedRequest.getPath());
+    }
+}
