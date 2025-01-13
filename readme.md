@@ -78,28 +78,29 @@ output {
 Configure Elastic search and Kibana
 Go to Kibana cosole and under indexes lookup for your index 
 and see the information about your log file
+
 Distributed Tracing
 ====================
 we are achieving it with the help of Zipkin
 -- Micrometer Tracing Bridge --
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-brave</artifactId>
-		</dependency>
-		-- Brave Tracer for Zipkin --
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave</artifactId>
-		</dependency>
-		-- Zipkin Reporter for sending traces --
-		<dependency>
-			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter-brave</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
+<dependency>
+	<groupId>io.micrometer</groupId>
+	<artifactId>micrometer-tracing-bridge-brave</artifactId>
+</dependency>
+-- Brave Tracer for Zipkin --
+<dependency>
+	<groupId>io.zipkin.brave</groupId>
+	<artifactId>brave</artifactId>
+</dependency>
+-- Zipkin Reporter for sending traces --
+<dependency>
+	<groupId>io.zipkin.reporter2</groupId>
+	<artifactId>zipkin-reporter-brave</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
 
 application.properties
 ======================
@@ -113,7 +114,8 @@ management.zipkin.tracing.endpoint=http://<zipkin-server-ip>:9411/api/v2/spans
 # Enable propagation of trace IDs
 spring.sleuth.propagation.type=B3
 
-when making REST calls between microservices, Spring will automatically include tracing headers (like X-B3-TraceId and X-B3-SpanId) in the requests.
+when making REST calls between microservices, Spring will automatically include tracing
+headers (like X-B3-TraceId and X-B3-SpanId) in the requests.
 
 docker setup for project
 =========================
