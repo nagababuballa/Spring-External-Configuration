@@ -1044,3 +1044,40 @@ add to load balancer
 go to load balancer and then target groups check the rules and correct it if necessary
 use this dns in application that act as a load balancer
 
+Gateway
+-------
+
+A Spring Boot Gateway is used to handle requests and act as a single entry point for microservices, enabling routing, load balancing, security, and monitoring.
+
+Dependency
+----------
+<dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-gateway</artifactId>
+    </dependency>
+
+Properties
+----------
+spring.gateway.routes[0].id=user-service
+spring.gateway.routes[0].uri=lb://user-service
+spring.gateway.routes[0].predicates[0].Path=/user/**
+so on....
+
+Load Balancing
+==============
+In monolithis applications we will manage all the functionalities inside a single application
+ie it has only one Target Group ---> Multiple Servers
+when request comes to application load balancer accepts the request and using round robin algorithm forwards it to any server based on availability
+
+But in case of Microservice architecture entire prooject is converted in the form of multiple services
+so here we have multiple target groups and each target group has multiple servers
+ex:
+---
+Hotels MicroService  ----> Hotel-TG ---> Multiple Servers(s11,s2)
+Flights Microservice ----> Flight-TG --> Multiple Servers(s3,s4)
+Trains Micro service ----> Train-TG ---> Multiple servers(s5,s6)
+
+Use only ALB unless there is a specific need
+if we are not using ALB use Eureka
+
+Create Docker image for Hotels MicroService,Flights Microservice,Trains Micro service and all other services available
