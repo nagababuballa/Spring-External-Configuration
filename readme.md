@@ -1,34 +1,44 @@
------------start-----------
-application properties for config server
-========================================
-spring cloud bus config
-=======================
+config server
+=============
+
+properties
+----------
 management.endpoints.web.exposure.include= refresh, bus-refresh
 spring.application.name= config-server
 server.port= 3100
-git related external configuration
-==================================
+
 spring.profiles.active= git
 spring.cloud.config.server.git.uri= https://github.com/nagababuballa/Spring-External-Configuration
 spring.cloud.config.server.git.default-label= main
 spring.cloud.config.server.git.search-paths= .
-rabbit mq messaging configuration
-=================================
+
+rabbit mq
+=========
+
+properties
+----------
 spring.rabbitmq.host= localhost
 spring.rabbitmq.port= 5672
 spring.rabbitmq.username= guest
 spring.rabbitmq.password= guest
+
 logging configuration
 =====================
-logging.config= classpath:logback-spring.xml
-------------End------------
 
------------start-----------
-application properties for discovery server(Eureka)
+properties
+----------
+logging.config= classpath:logback-spring.xml
+
+Eureka Server
+=============
+
+properties
+----------
 spring.application.name= discovery-service
 spring.config.import= optional:configserver:http://localhost:3100
-------------End------------
 
+Dependencies
+------------
 <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
@@ -37,10 +47,12 @@ spring.config.import= optional:configserver:http://localhost:3100
 
 Centralized Logging Configuration
 =================================
+
 1)each and every microservice write the log to a file that contains the log information
 logging.file.name=/var/log/microservice-name.log
 logging.pattern.file={"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}", "level":"%p", "thread":"%t", "logger":"%c", "message":"%m"}
 2)Configure file beats in each micro service which is responsible for monitoring the log file and push it to logstash
+
 filebeat.yml
 ============
 filebeat.inputs:
@@ -57,8 +69,10 @@ filebeat.inputs:
       match: after
 output.logstash:
   hosts: ["${logstash-server-ip}:5044"]  # Replace with your Logstash server IP
+
 Log stash
 ==========
+
 logstash-filebeat.conf
 ----------------------
 input {
@@ -75,12 +89,14 @@ output {
     codec => rubydebug
   }
 }
+
 Configure Elastic search and Kibana
 Go to Kibana cosole and under indexes lookup for your index 
 and see the information about your log file
 
 Distributed Tracing
 ====================
+
 we are achieving it with the help of Zipkin
 -- Micrometer Tracing Bridge --
 <dependency>
@@ -104,6 +120,7 @@ we are achieving it with the help of Zipkin
 
 application.properties
 ======================
+
 # Enable Micrometer tracing
 management.tracing.enabled=true
 
@@ -118,7 +135,7 @@ when making REST calls between microservices, Spring will automatically include 
 headers (like X-B3-TraceId and X-B3-SpanId) in the requests.
 
 Circuit Breaker
----------------
+===============
 Inorder to avoid cascading failures
 it is the specification and implementation is provided by number of techniques like Netflix Hystrix , Resillence 4J and so on
 Since Netflix Hystrix is outdated and it is in maintanence we are using Resillence 4j
@@ -210,7 +227,7 @@ spring.kafka.consumer.value-deserializer: org.springframework.kafka.support.seri
 spring.kafka.consumer.properties.spring.json.trusted.packages: '*'
 spring.kafka.consumer.properties.spring.json.type.mapping:orderConfirmation:com.alibou.ecommerce.kafka.order.OrderConfirmation
 
-Receving the Payload from kafka topic using Listener
+Receiving the Payload from kafka topic using Listener
 ----------------------------------------------------
 @KafkaListener(topics = "order-topic", groupId = "order-group")
 @RetryableTopic(attempts = "3")
@@ -1015,3 +1032,15 @@ public class UserServiceIntegrationTest {
         assertEquals("/users/1", recordedRequest.getPath());
     }
 }
+
+Application Load Balancer
+=========================
+
+create a docker image for all the services
+create aws ecs and give this image and also create a new load balancer
+for each and every 
+tasklet ----> cluster ----> service -----> target group
+add to load balancer
+go to load balancer and then target groups check the rules and correct it if necessary
+use this dns in application that act as a load balancer
+
