@@ -12,6 +12,22 @@ spring.cloud.config.server.git.uri= https://github.com/nagababuballa/Spring-Exte
 spring.cloud.config.server.git.default-label= main
 spring.cloud.config.server.git.search-paths= .
 
+Eureka Server
+=============
+
+properties
+----------
+spring.application.name= discovery-service
+spring.config.import= optional:configserver:http://localhost:3100
+
+Dependencies
+------------
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
+@EnableEurekaServer
+
 rabbit mq
 =========
 
@@ -28,22 +44,6 @@ logging configuration
 properties
 ----------
 logging.config= classpath:logback-spring.xml
-
-Eureka Server
-=============
-
-properties
-----------
-spring.application.name= discovery-service
-spring.config.import= optional:configserver:http://localhost:3100
-
-Dependencies
-------------
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
-</dependency>
-@EnableEurekaServer
 
 Centralized Logging Configuration
 =================================
