@@ -1154,7 +1154,19 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationManagerResolver(resolver())
-                );
+                ).exceptionHandling()
+                    .authenticationEntryPoint((exchange, exception) -> {
+                        // Custom authentication entry point
+                        log.error("Authentication failed: " + exception.getMessage());
+			create a own class that has all required attributes
+                        return Mono.error(useithere);
+                    })
+                    .accessDeniedHandler((exchange, exception) -> {
+                        // Custom access denied handler
+                        log.error("Access Denied: " + exception.getMessage());
+                        create a own class that has all required attributes
+                        return Mono.error(useithere);
+                    });
         return httpSecurity.build();
     }
     ReactiveAuthenticationManagerResolver<ServerWebExchange> resolver() {
@@ -1172,6 +1184,9 @@ public class SecurityConfig {
             return null;
         };
     }
+    private Throwable mapException(ResponseStatusException exception) {
+       Define own logic to send for front end
+    }
     private String resolveToken(ServerHttpRequest request) {
         String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(HEADER_PREFIX)) {
@@ -1181,3 +1196,5 @@ public class SecurityConfig {
     }
 }
 
+Transaction Management
+----------------------
