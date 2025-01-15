@@ -1073,11 +1073,111 @@ But in case of Microservice architecture entire prooject is converted in the for
 so here we have multiple target groups and each target group has multiple servers
 ex:
 ---
-Hotels MicroService  ----> Hotel-TG ---> Multiple Servers(s11,s2)
-Flights Microservice ----> Flight-TG --> Multiple Servers(s3,s4)
-Trains Micro service ----> Train-TG ---> Multiple servers(s5,s6)
+Service Name                 Target Group     Weightage                   Request Mapping      http request
+Hotels MicroService   ---->  Hotel-TG  ---> Multiple Servers(s1,s2)  ---> /api/v1/hotels  ---> /hotel/{id}
+Flights Microservice  ---->  Flight-TG ---> Multiple Servers(s3,s4)  ---> /api/v1/flights ---> /flight/{id}
+Trains Micro service  ---->  Train-TG  ---> Multiple servers(s5,s6)  ---> /api/v1/trains  ---> /train/{id}
+Gateway Micro service ---->  Train-TG  ---> Multiple servers(s7,s8)  ---> /api/v1/gateway ---> /validate
 
 Use only ALB unless there is a specific need
 if we are not using ALB use Eureka
 
-Create Docker image for Hotels MicroService,Flights Microservice,Trains Micro service and all other services available
+Using Gateway for External Calls
+================================
+when react app want to send request to hotels service 
+it should send the request as per the path mentioned
+/api/v1/gateway/hotels/hotel/{id}  ---> now first it is send to alb 
+it check with path matcher of  /api/v1/gateway/** and it identifies that it belongs to Gateway-TG
+and Gateway Microservice is called now in the configuration we are rewriting the path
+for /api/v1/gateway/hotels/hotel/{id} ---> /api/v1/hotels/hotel/{id}
+now again call goes to alburl and 
+it check with path matcher of  /api/v1/hotels/** and it identifies that it belongs to Hotel-TG
+corresponding request uri will be called
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: hotel-service
+          uri: http://albdnsurl 
+          predicates:
+            - Path=/api/v1/gateway/hotels/**  
+          filters:
+            - RewritePath=/api/v1/gateway/hotels/(?<segment>.*), /api/v1/hotels/${segment} 
+
+Internal Communication
+======================
+Internal service communication means one service is called form other service
+we have an example above using WebClient
+
+Security Configuration
+======================
+To avoid potention harms like allowing unauthenticated or unauthorized users to access an application
+Our application should be secured
+
+IAM for Open OAuth Implementation(Key clock)
+=================================
+
+add dependency of spring boot web flux
+oauth2 resource server
+
+implement security at Gateway
+============================
+import com.nimbusds.jwt.JWTParser;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders;
+import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.util.StringUtils;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+@Configuration
+@EnableWebFluxSecurity
+public class SecurityConfig {
+    private static final String HEADER_PREFIX = "Bearer ";
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity httpSecurity) {
+        httpSecurity
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(authorize -> authorize
+                        .pathMatchers(public-url).permitAll()
+                        .anyExchange().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationManagerResolver(resolver())
+                );
+        return httpSecurity.build();
+    }
+    ReactiveAuthenticationManagerResolver<ServerWebExchange> resolver() {
+        return exchange -> {
+            String token = resolveToken(exchange.getRequest());
+            if (token == null) throw new RuntimeException("Token cannot be null");
+            try {
+                String issuer = JWTParser.parse(token).getJWTClaimsSet().getIssuer();
+                if(StringUtils.hasText(issuer)) {
+                    return Mono.just(new JwtReactiveAuthenticationManager(ReactiveJwtDecoders.fromIssuerLocation(issuer)));
+                }
+            } catch (Exception e) {
+                log.error("Error while validating the token");
+            }
+            return null;
+        };
+    }
+    private String resolveToken(ServerHttpRequest request) {
+        String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(HEADER_PREFIX)) {
+            return bearerToken.substring(7);
+        }
+        return  null;
+    }
+}
+
