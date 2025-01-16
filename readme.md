@@ -1195,6 +1195,3 @@ public class SecurityConfig {
         return  null;
     }
 }
-
-Transaction Management
-----------------------
