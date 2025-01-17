@@ -26,6 +26,7 @@ Dependencies
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
 </dependency>
+
 @EnableEurekaServer
 
 rabbit mq
@@ -103,12 +104,10 @@ we are achieving it with the help of Zipkin
 	<groupId>io.micrometer</groupId>
 	<artifactId>micrometer-tracing-bridge-brave</artifactId>
 </dependency>
--- Brave Tracer for Zipkin --
 <dependency>
 	<groupId>io.zipkin.brave</groupId>
 	<artifactId>brave</artifactId>
 </dependency>
--- Zipkin Reporter for sending traces --
 <dependency>
 	<groupId>io.zipkin.reporter2</groupId>
 	<artifactId>zipkin-reporter-brave</artifactId>
@@ -175,16 +174,16 @@ resilience4j.retry.instances.order.max-attempts=3
 resilience4j.retry.instances.order.wait-duration=5s
 
 @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @CircuitBreaker(name = "order", fallbackMethod = "fallbackMethod")
-    @TimeLimiter(name = "order")
-    @Retry(name = "order")
-    public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
-        return CompletableFuture.supplyAsync(() -> orderService.placeOrder(orderRequest));
-    }
-    public CompletableFuture<String> fallbackMethod(OrderRequest orderRequest, RuntimeException runtimeException) {
-        return CompletableFuture.supplyAsync(() -> "Oops! Something went wrong, please order after some time!");
-    }
+@ResponseStatus(HttpStatus.CREATED)
+@CircuitBreaker(name = "order", fallbackMethod = "fallbackMethod")
+@TimeLimiter(name = "order")
+@Retry(name = "order")
+public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
+return CompletableFuture.supplyAsync(() -> orderService.placeOrder(orderRequest));
+}
+public CompletableFuture<String> fallbackMethod(OrderRequest orderRequest, RuntimeException runtimeException) {
+return CompletableFuture.supplyAsync(() -> "Oops! Something went wrong, please order after some time!");
+}
 
 Kafka
 =====
@@ -193,11 +192,11 @@ Distributed Messaging system
 Topic Creation
 --------------
 @Bean
-    public NewTopic orderTopic() {
-        return TopicBuilder
-                .name("order-topic")
-                .build();
-    }
+public NewTopic orderTopic() {
+return TopicBuilder
+	.name("order-topic")
+	.build();
+}
     
 Producer configuration
 ----------------------
@@ -209,12 +208,12 @@ spring.kafka.producer.properties.spring.json.type.mapping= orderConfirmation:com
 using kafka template to send the payload over topic
 ---------------------------------------------------
 public void sendOrderConfirmation(OrderConfirmation orderConfirmation) {
-        log.info("Sending order confirmation");
-        Message<OrderConfirmation> message = MessageBuilder
-                .withPayload(orderConfirmation)
-                .setHeader(TOPIC, "order-topic")
-                .build();
-        kafkaTemplate.send(message);
+	log.info("Sending order confirmation");
+	Message<OrderConfirmation> message = MessageBuilder
+		.withPayload(orderConfirmation)
+		.setHeader(TOPIC, "order-topic")
+		.build();
+	kafkaTemplate.send(message);
     }
 
 Consumer Configuration
@@ -232,8 +231,8 @@ Receiving the Payload from kafka topic using Listener
 @KafkaListener(topics = "order-topic", groupId = "order-group")
 @RetryableTopic(attempts = "3")
 public void consumeOrderConfirmationNotifications(OrderConfirmation orderConfirmation,@Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.OFFSET) long offset) throws MessagingException {
-        log.info("Received: {} from {} offset {}", new ObjectMapper().writeValueAsString(orderConfirmation), topic, offset);
-    }
+  log.info("Received: {} from {} offset {}", new ObjectMapper().writeValueAsString(orderConfirmation), topic, offset);
+}
     
 @DltHandler 
 public void listenDLT(OrderConfirmation orderConfirmation, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.OFFSET) long offset) {
@@ -242,11 +241,13 @@ public void listenDLT(OrderConfirmation orderConfirmation, @Header(KafkaHeaders.
 
 Monitoring
 ==========
+
 we are using prometeus and grafana for monitoring all the micro services
 1)Actuator is used fro exposing all the metrics like jvm metrics and all other metrics
 2)Promotheus polls micro services for every predefined interval of time
   uses an in memory database to store these metrics
 3)Grafana is used for visualization purpose by collecting these metrics from Promotheus
+
 dependencies
 ------------
 add these dependencies in all our micro services
@@ -258,6 +259,7 @@ add these dependencies in all our micro services
    <groupId>org.springframework.boot</groupId>
    <artifactId>spring-boot-starter-actuator</artifactId>
 </dependency>
+
 properties
 ----------
 we need to add the prometheus actuator end point
@@ -296,7 +298,7 @@ scrape_configs:
           application: 'Notification Service Application'
 
 Docker compose setup:
-----------------------
+====================
 version: '3.7'
 services:
   ## Postgres Docker Compose Config
@@ -509,9 +511,8 @@ Save and test
 
 Creating dashboard
 ==================
-Grafana_Dashboard.json
 Requires a lot of configuration stuff to do so
-here i am using some predefined json data configured
+here i am using some predefined json data configured(Grafana_Dashboard.json)
 click on + ---> import ---> paste the json that we have on grafafana_dashboard.json
 click on load
 select Promotheus dropdown ---> select Prometheus Micro services(we named it already)
@@ -1193,5 +1194,75 @@ public class SecurityConfig {
             return bearerToken.substring(7);
         }
         return  null;
+    }
+}
+
+Handling Exceptions
+===================
+Using Controller Advice to catch all the exceptions Globally and sending Error Response 
+that contains useful information
+
+But in specific Scenarios like when communication happens between 
+
+Sync to Async
+-------------
+
+This is Async Service throwing an exception when calling Get API /api/service-b
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+@RestController
+public class ServiceBController {
+    @GetMapping("/api/service-b")
+    public Mono<String> serviceBApi() {
+        // Simulate an error in Service B
+        ErrorResponse errorResponse = new ErrorResponse("Service B error", 500, "Internal Server Error");
+        return Mono.error(new ServiceBException(errorResponse));
+    }
+}
+
+Now we have to handle and generate errorresponse to client from Sync
+=====================================================================
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.Mono;
+
+@RestController
+public class ServiceAController {
+    @Autowired
+    private RestTemplate restTemplate;
+    @GetMapping("/api/service-a")
+    public Mono<String> serviceAApi() {
+        // Make a call to Service B (non-blocking)
+        return Mono.fromCallable(() -> {
+            return restTemplate.getForObject("http://localhost:8081/api/service-b", String.class);
+        })
+        .onErrorResume(ServiceBException.class, ex -> {
+            // Forward ServiceBException to be handled by @ControllerAdvice
+            return Mono.error(ex);
+        })
+        .onErrorResume(Exception.class, ex -> {
+            // This handles other generic exceptions
+            ErrorResponse errorResponse = new ErrorResponse("Unexpected error in Service A", 500, ex.getMessage());
+            return Mono.error(new ServiceAException(errorResponse));  // Create a new exception
+        });
+    }
+}
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(ServiceBException.class)
+    public ResponseEntity<String> handleServiceBException(ServiceBException ex) {
+        // Return a custom error message and status based on the exception
+        ErrorResponse errorResponse = ex.getErrorResponse();
+        return new ResponseEntity<>(errorResponse.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
